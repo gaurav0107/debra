@@ -42,3 +42,7 @@ dist/
 # MacOS files
 .DS_Store
 
+
+# Creds
+credentials.json
+*.pickle
