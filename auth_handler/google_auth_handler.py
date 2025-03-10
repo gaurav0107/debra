@@ -1,13 +1,17 @@
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 import os
 import pickle
+from repository import KVStore
 
 # Set to allow HTTP for local development
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/gmail.modify",
     "https://www.googleapis.com/auth/calendar",
     "https://www.googleapis.com/auth/calendar.events",
@@ -17,6 +21,7 @@ CLIENT_SECRETS_FILE = "credentials.json"
 TOKEN_FILE = "token.pickle"
 REDIRECT_URI = "http://127.0.0.1:8000/auth/callback"
 
+key_value_store = KVStore()
 
 class GoogleAuthHandler:
     def __init__(self):
@@ -33,25 +38,19 @@ class GoogleAuthHandler:
 
     def get_credentials(self, request_url):
         """Extract credentials from Google's OAuth callback."""
+        print(request_url)
         self.flow.fetch_token(authorization_response=request_url)
-        credentials = self.flow.credentials
+        user_info = self._get_user_info(self.flow.credentials)
+        return user_info['email'], self.flow.credentials
 
-        # Store tokens securely (use DB in production)
-        token_data = {
-            "access_token": credentials.token,
-            "refresh_token": credentials.refresh_token,
-            "expiry": credentials.expiry.isoformat() if credentials.expiry else None,
-        }
-
-        with open(TOKEN_FILE, "wb") as token_file:
-            pickle.dump(credentials, token_file)
-
-        return token_data
+    def _get_user_info(self, credentials: Credentials):
+        # Initialize the OAuth2 service
+        oauth2_service = build('oauth2', 'v2', credentials=credentials)
+        # Retrieve user information
+        user_info = oauth2_service.userinfo().get().execute()
+        return user_info
 
     @staticmethod
-    def load_credentials():
+    def load_credentials(email):
         """Load saved credentials from token file."""
-        if os.path.exists(TOKEN_FILE):
-            with open(TOKEN_FILE, "rb") as token_file:
-                return pickle.load(token_file)
-        return None
+        return pickle.loads(key_value_store.get(email))

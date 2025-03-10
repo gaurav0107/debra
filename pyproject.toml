@@ -6,13 +6,18 @@ authors = [
     {name = "gd"}
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "google-auth-oauthlib (>=1.2.1,<2.0.0)",
     "google-auth-httplib2>=0.1.0",
     "google-api-python-client>=2.108.0",
     "fastapi (>=0.115.11,<0.116.0)",
     "uvicorn (>=0.34.0,<0.35.0)",
+    "redis (>=5.2.1,<6.0.0)",
+    "langchain (>=0.3.20,<0.4.0)",
+    "openai (>=1.65.5,<2.0.0)",
+    "langchain-community (>=0.3.19,<0.4.0)",
+    "langchain-openai (>=0.3.8,<0.4.0)",
 ]
 
 
